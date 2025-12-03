@@ -4,11 +4,9 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>C.S Pharmacy</title>
-  <!-- Bootstrap 5 + icons + SweetAlert -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
   <style>
     :root{--primary:#0061f2;--danger:#e81500;--success:#00ac69;--warning:#f4a100;}
     body{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;min-height:100vh;}
@@ -71,14 +69,15 @@
       <div class="col-md-3"><div class="card-modern p-3 text-center">
         <button class="btn btn-gradient w-100 mb-2" onclick="go('sales')"><i class="bi bi-receipt"></i> Sell</button>
         <button class="btn btn-gradient w-100 mb-2" onclick="go('reports')"><i class="bi bi-graph-up"></i> Reports</button>
-        <button class="btn btn-gradient w-100" onclick="go('drugs')"><i class="bi bi-pills"></i> Drugs</button>
+        <!-- Drugs button hidden for normal users -->
+        <button id="drugsBtn" class="btn btn-gradient w-100" onclick="go('drugs')" style="display:none;"><i class="bi bi-pills"></i> Drugs</button>
       </div></div>
     </div>
 
     <!-- Dashboard -->
     <div id="dashboardView"><div class="card-modern p-4"><h5 class="mb-3"><i class="bi bi-speedometer2"></i> Dashboard</h5><div id="lowDrugsList"></div></div></div>
 
-    <!-- Drugs View -->
+    <!-- Drugs View (Admin only) -->
     <div id="drugsView" style="display:none;">
       <div class="container">
         <div class="card-modern p-4 mb-4"><h5 class="mb-3"><i class="bi bi-pills"></i> Drug Management</h5><form id="addDrugForm" class="row g-3"><input type="hidden" id="editDrugId"><div class="col-md-3"><input id="drugName" class="form-control" placeholder="Drug Name" required></div><div class="col-md-2"><input id="drugPrice" class="form-control" placeholder="Price" type="number" step="0.01" required></div><div class="col-md-2"><input id="drugQty" class="form-control" placeholder="Quantity" type="number" required></div><div class="col-md-2"><input id="drugLow" class="form-control" placeholder="Threshold" type="number" value="5" required></div><div class="col-md-3"><input id="drugExpiry" class="form-control" placeholder="Expiry Date" type="date" required></div><div class="col-md-12 text-end"><button class="btn btn-gradient">Save Drug</button></div></form></div>
@@ -147,7 +146,7 @@ document.getElementById('loginForm').addEventListener('submit',e=>{
     sessionStorage.setItem('cs_role',user.role);
     showMain(user);
   }else{
-    Swal.fire({icon:'error',title:'Wrong credentials'});
+    Swal.fire({icon:'error',title='Wrong credentials'});
   }
   document.getElementById('loginPass').value='';
 });
@@ -163,6 +162,7 @@ function showMain(user){
   document.getElementById('currentUser').textContent=user.username;
   if(user.role==='admin'){
     document.getElementById('adminPanel').style.display='block';
+    document.getElementById('drugsBtn').style.display='block';
     renderUsers();
   }
   updateStats();renderLowList();showAlertIfLow();go('dashboard');
@@ -391,7 +391,7 @@ document.getElementById('payBalanceBtn').addEventListener('click',()=>{
       save(KEY_PATIENTS,list);
       currentPatient=p;
       document.getElementById('creditInfoBalance').textContent='$'+p.balance.toFixed(2);
-      alert('Paid $'+amt+' – new balance $'+p.balance.toFixed(2)); // simple feedback
+      alert('Paid $'+amt+' – new balance $'+p.balance.toFixed(2));
     }
   });
 });
@@ -497,7 +497,7 @@ function renderReports(){
   const rc=document.getElementById('reportCredits');
   rc.innerHTML='';
   const plist=load(KEY_PATIENTS);
-  if(plist.length)plist.forEach(p=>rc.innerHTML+=`<li class="list-group-item d-flex justify-content-between">${escapeHtml(p.name)} <span>$${p.balance.toFixed(2)}</span></li>`);
+  if(plist.length)plist.forEach(p=>rc.innerHTML+=`<li class="list-group-item d-flex justify-content-between"><div><strong>${escapeHtml(p.name)}</strong><br><small>${p.phone}</small></div><span>$${p.balance.toFixed(2)}</span></li>`);
   else rc.innerHTML='<li class="list-group-item text-muted">No credit patients</li>';
 
   const rl=document.getElementById('reportLow');
