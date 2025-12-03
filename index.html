@@ -1,31 +1,63 @@
 <!doctype html>
 <html lang="so">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>C.S Pharmacy</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <style>
-    :root{--primary:#0061f2;--danger:#e81500;--success:#00ac69;--warning:#f4a100;}
-    body{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;min-height:100vh;}
-    .glass{background:rgba(255,255,255,.15);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.2);border-radius:1rem;box-shadow:0 8px 32px rgba(0,0,0,.1);}
-    .btn-gradient{background:linear-gradient(45deg,var(--primary),#00cfd5);color:#fff;border:none;border-radius:.5rem;transition:all .3s ease;}
-    .btn-gradient:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,97,242,.4);}
-    .card-modern{border:none;border-radius:1rem;box-shadow:0 6px 25px rgba(0,0,0,.08);transition:transform .3s ease;}
-    .card-modern:hover{transform:translateY(-5px);}
-    .table-modern thead{background:var(--primary);color:#fff;}
-    .receipt-box{background:#fff;border-radius:.75rem;padding:1.5rem;max-width:320px;margin:auto;font-family:'Courier New',monospace;box-shadow:0 4px 20px rgba(0,0,0,.1);}
-    .low-badge{background:var(--warning);color:#000;padding:.25rem .5rem;border-radius:.5rem;font-weight:600;}
-    .expiry-danger{color:var(--danger);font-weight:700;}
-    .receipt-line{display:flex;justify-content:space-between;}
-    @media print{body *{visibility:hidden;}#printArea,#printArea *{visibility:visible;}#printArea{position:absolute;left:0;top:0;width:100%;}}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>C.S Pharmacy</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{
+  --primary:#0061f2;--danger:#e81500;--success:#00ac69;--warning:#f4a100;
+  --bg:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+  --glass:rgba(255,255,255,.15);--text:#fff;
+}
+body.dark{
+  --bg:#121212;
+  --glass:rgba(30,30,30,.85);
+  --text:#eee;
+}
+body{
+  background:var(--bg); color:var(--text); font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; min-height:100vh;
+}
+.glass{
+  background:var(--glass); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,.2);
+  border-radius:1rem; box-shadow:0 8px 32px rgba(0,0,0,.1);
+}
+.btn-gradient{
+  background:linear-gradient(45deg,var(--primary),#00cfd5); color:#fff; border:none; border-radius:.5rem; transition:all .3s ease;
+}
+.btn-gradient:hover{ transform:translateY(-2px); box-shadow:0 4px 20px rgba(0,97,242,.4); }
+.card-modern{ border:none; border-radius:1rem; box-shadow:0 6px 25px rgba(0,0,0,.08); transition:transform .3s ease; }
+.card-modern:hover{ transform:translateY(-5px); }
+.table-modern thead{ background:var(--primary); color:#fff; }
+.receipt-box{
+  background:#fff; border-radius:.75rem; padding:1.5rem; max-width:320px; margin:auto;
+  font-family:'Courier New',monospace; box-shadow:0 4px 20px rgba(0,0,0,.1);
+}
+.low-badge{ background:var(--warning); color:#000; padding:.25rem .5rem; border-radius:.5rem; font-weight:600; }
+.expiry-danger{ color:var(--danger); font-weight:700; }
+.receipt-line{ display:flex; justify-content:space-between; }
+/* ---------- LOGO ---------- */
+.logo{
+  display:inline-flex; align-items:center; gap:.5rem;
+  font-weight:800; font-size:1.4rem; color:#fff;
+}
+.logo::before{
+  content:""; display:inline-block; width:36px; height:36px;
+  background:url('logo.jpg') center/cover no-repeat;
+  border-radius:50%; border:2px solid #fff;
+}
+/* if no image, fallback icon */
+.logo.noimg::before{ background:var(--primary); content:"💊"; text-align:center; line-height:32px; }
+@media print{ body *{visibility:hidden;} #printArea,#printArea *{visibility:visible;} #printArea{position:absolute;left:0;top:0;width:100%;} }
+</style>
 </head>
 <body>
 
-<!-- ******************  LOGIN PAGE ONLY  ****************** -->
+<!-- ******************  LOGIN PAGE  ****************** -->
 <div id="loginPage" class="d-flex align-items-center justify-content-center vh-100">
   <div class="glass p-4" style="width:100%;max-width:400px;">
     <h3 class="text-white text-center mb-4"><i class="bi bi-shield-lock"></i> Login</h3>
@@ -37,77 +69,52 @@
   </div>
 </div>
 
-<!-- ******************  MAIN SYSTEM (hidden until login)  ****************** -->
+<!-- ******************  MAIN SYSTEM  ****************** -->
 <div id="mainPage" style="display:none;">
-  <nav class="navbar navbar-light bg-white rounded-pill px-4 mb-4">
-    <span class="navbar-brand fw-bold text-primary"><i class="bi bi-capsule"></i> C.S Pharmacy</span>
-    <div>
-      <span class="me-3">User: <b id="currentUser">-</b></span>
-      <button class="btn btn-sm btn-outline-danger rounded-pill" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Logout</button>
-    </div>
-  </nav>
-
-  <!-- Admin-only User Management -->
-  <div id="adminPanel" class="container mb-4" style="display:none;">
-    <div class="card-modern p-4">
-      <h5><i class="bi bi-people"></i> User Management (Admin)</h5>
-      <form id="addUserForm" class="row g-3">
-        <div class="col-md-4"><input id="newUser" class="form-control" placeholder="New Username" required></div>
-        <div class="col-md-4"><input id="newPass" class="form-control" placeholder="Password" required></div>
-        <div class="col-md-4"><button class="btn btn-gradient">Add User</button></div>
-      </form>
-      <ul id="userList" class="list-group mt-3"></ul>
-    </div>
+<nav class="navbar navbar-light bg-white rounded-pill px-4 mb-4">
+  <span class="navbar-brand fw-bold text-primary logo noimg"><i class="bi bi-capsule"></i> C.S PHARMACY</span>
+  <div>
+    <button id="themeToggle" class="btn btn-sm btn-outline-secondary rounded-pill me-2"><i class="bi bi-moon"></i></button>
+    <span class="me-3">User: <b id="currentUser">-</b></span>
+    <button class="btn btn-sm btn-outline-danger rounded-pill" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Logout</button>
   </div>
+</nav>
 
-  <!-- Dashboard / Stats -->
-  <div class="container">
-    <div class="row g-3 mb-4">
-      <div class="col-md-3"><div class="card-modern p-3 text-center"><div class="text-primary fs-1"><i class="bi bi-capsule"></i></div><h5 id="statItems">0</h5><small>Drugs</small></div></div>
-      <div class="col-md-3"><div class="card-modern p-3 text-center"><div class="text-warning fs-1"><i class="bi bi-exclamation-triangle"></i></div><h5 id="statLow">0</h5><small>Low Stock</small></div></div>
-      <div class="col-md-3"><div class="card-modern p-3 text-center"><div class="text-success fs-1"><i class="bi bi-cash-stack"></i></div><h5 id="statToday">0.00</h5><small>Today's Sales</small></div></div>
-      <div class="col-md-3"><div class="card-modern p-3 text-center">
-        <button class="btn btn-gradient w-100 mb-2" onclick="go('sales')"><i class="bi bi-receipt"></i> Sell</button>
-        <button class="btn btn-gradient w-100 mb-2" onclick="go('reports')"><i class="bi bi-graph-up"></i> Reports</button>
-        <!-- Drugs button hidden for normal users -->
-        <button id="drugsBtn" class="btn btn-gradient w-100" onclick="go('drugs')" style="display:none;"><i class="bi bi-pills"></i> Drugs</button>
-      </div></div>
-    </div>
-
-    <!-- Dashboard -->
-    <div id="dashboardView"><div class="card-modern p-4"><h5 class="mb-3"><i class="bi bi-speedometer2"></i> Dashboard</h5><div id="lowDrugsList"></div></div></div>
-
-    <!-- Drugs View (Admin only) -->
-    <div id="drugsView" style="display:none;">
-      <div class="container">
-        <div class="card-modern p-4 mb-4"><h5 class="mb-3"><i class="bi bi-pills"></i> Drug Management</h5><form id="addDrugForm" class="row g-3"><input type="hidden" id="editDrugId"><div class="col-md-3"><input id="drugName" class="form-control" placeholder="Drug Name" required></div><div class="col-md-2"><input id="drugPrice" class="form-control" placeholder="Price" type="number" step="0.01" required></div><div class="col-md-2"><input id="drugQty" class="form-control" placeholder="Quantity" type="number" required></div><div class="col-md-2"><input id="drugLow" class="form-control" placeholder="Threshold" type="number" value="5" required></div><div class="col-md-3"><input id="drugExpiry" class="form-control" placeholder="Expiry Date" type="date" required></div><div class="col-md-12 text-end"><button class="btn btn-gradient">Save Drug</button></div></form></div>
-        <div class="card-modern p-4"><h5 class="mb-3"><i class="bi bi-list-ul"></i> Drug List</h5><input id="searchDrug" class="form-control mb-3" placeholder="Search drug..."><div style="max-height:400px; overflow:auto;"><table class="table table-modern table-sm"><thead><tr><th>Drug</th><th>Price</th><th>Qty</th><th>Threshold</th><th>Expiry</th><th>Action</th></tr></thead><tbody id="drugsTable"></tbody></table></div></div>
-      </div>
-    </div>
-
-    <!-- Sales View -->
-    <div id="salesView" style="display:none;">
-      <div class="container">
-        <div class="row g-4">
-          <div class="col-md-6 position-relative"><div class="card-modern p-4"><h5 class="mb-3"><i class="bi bi-search"></i> Select Drugs</h5><input id="saleSearch" class="form-control mb-3" placeholder="Search drug..."><div id="saleDrugsList" style="max-height:320px; overflow:auto;"></div></div></div>
-          <div class="col-md-6"><div class="card-modern p-4"><h5 class="mb-3"><i class="bi bi-receipt"></i> Prescription</h5><div id="prescriptionArea"><p class="text-muted">Prescription is empty.</p></div><div class="mt-3 d-flex gap-2 align-items-center"><select id="paymentType" class="form-select w-auto"><option value="Paid">Paid</option><option value="Credit">Credit</option></select><input id="creditName" class="form-control" placeholder="Patient Name" style="display:none;"><input id="creditPhone" class="form-control" placeholder="Phone" style="display:none;"><button id="saveSaleBtn" class="btn btn-gradient ms-auto">Save & Print</button></div><div id="creditInfo" style="display:none;" class="patient-info mt-3"><div><strong id="creditInfoName"></strong></div><div class="muted-small">Phone: <b id="creditInfoPhone"></b></div><div class="muted-small">Balance: <b id="creditInfoBalance">0.00</b> USD</div><button class="btn btn-sm btn-outline-success mt-2" id="payBalanceBtn">Pay Balance</button></div></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Reports View -->
-    <div id="reportsView" style="display:none;">
-      <div class="container">
-        <div class="row g-4">
-          <div class="col-md-6"><div class="card-modern p-4 mb-4"><h5 class="mb-3"><i class="bi bi-cash-stack"></i> Sales Summary</h5><h3 id="reportTodayTotal">0.00</h3><div class="mt-3"><h6>Credit Patients</h6><ul id="reportCredits" class="list-group"></ul></div></div><div class="card-modern p-4"><h5 class="mb-3"><i class="bi bi-arrow-return-left"></i> Returns</h5><div class="d-flex gap-2"><input id="returnId" class="form-control" placeholder="Order ID"><button class="btn btn-gradient" id="doReturnBtn">Process</button></div><div id="returnList" class="mt-3"></div></div></div>
-          <div class="col-md-6"><div class="card-modern p-4 mb-4"><h5 class="mb-3"><i class="bi bi-exclamation-triangle"></i> Low / Expired Stock</h5><ul id="reportLow" class="list-group"></ul></div><div class="card-modern p-4"><h5 class="mb-3"><i class="bi bi-clock-history"></i> Recent Sales</h5><div style="max-height:240px; overflow:auto;"><table class="table table-modern table-sm"><thead><tr><th>ID</th><th>Date</th><th>Total</th><th>Type</th></tr></thead><tbody id="salesTable"></tbody></table></div></div></div>
-        </div>
-      </div>
-    </div>
+<!-- Admin-only -->
+<div id="adminPanel" class="container mb-4" style="display:none;">
+  <div class="card-modern p-4">
+    <h5><i class="bi bi-people"></i> User Management (Admin)</h5>
+    <form id="addUserForm" class="row g-3">
+      <div class="col-md-4"><input id="newUser" class="form-control" placeholder="New Username" required></div>
+      <div class="col-md-4"><input id="newPass" class="form-control" placeholder="Password" required></div>
+      <div class="col-md-4"><button class="btn btn-gradient">Add User</button></div>
+    </form>
+    <ul id="userList" class="list-group mt-3"></ul>
   </div>
 </div>
 
-<!-- PRINT AREA -->
+<!-- Dashboard / Stats -->
+<div class="container">
+  <div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="card-modern p-3 text-center"><div class="text-primary fs-1"><i class="bi bi-capsule"></i></div><h5 id="statItems">0</h5><small>Drugs</small></div></div>
+    <div class="col-md-3"><div class="card-modern p-3 text-center"><div class="text-warning fs-1"><i class="bi bi-exclamation-triangle"></i></div><h5 id="statLow">0</h5><small>Low Stock</small></div></div>
+    <div class="col-md-3"><div class="card-modern p-3 text-center"><div class="text-success fs-1"><i class="bi bi-cash-stack"></i></div><h5 id="statToday">0.00</h5><small>Today's Sales</small></div></div>
+    <div class="col-md-3"><div class="card-modern p-3 text-center">
+      <button class="btn btn-gradient w-100 mb-2" onclick="go('sales')"><i class="bi bi-receipt"></i> Sell</button>
+      <button class="btn btn-gradient w-100 mb-2" onclick="go('reports')"><i class="bi bi-graph-up"></i> Reports</button>
+      <button class="btn btn-gradient w-100" onclick="go('drugs')"><i class="bi bi-pills"></i> Drugs</button>
+    </div></div>
+  </div>
+
+  <!-- Views -->
+  <div id="dashboardView"><div class="card-modern p-4"><h5 class="mb-3"><i class="bi bi-speedometer2"></i> Dashboard</h5><div id="lowDrugsList"></div></div></div>
+  <div id="drugsView" style="display:none;"><div class="container"><div class="card-modern p-4 mb-4"><h5 class="mb-3"><i class="bi bi-pills"></i> Drug Management</h5><form id="addDrugForm" class="row g-3"><input type="hidden" id="editDrugId"><div class="col-md-3"><input id="drugName" class="form-control" placeholder="Drug Name" required></div><div class="col-md-2"><input id="drugPrice" class="form-control" placeholder="Price" type="number" step="0.01" required></div><div class="col-md-2"><input id="drugQty" class="form-control" placeholder="Quantity" type="number" required></div><div class="col-md-2"><input id="drugLow" class="form-control" placeholder="Threshold" type="number" value="5" required></div><div class="col-md-2"><input id="drugExpiry" class="form-control" placeholder="Expiry Date" type="date" required></div><div class="col-md-3"><input id="drugBarcode" class="form-control" placeholder="Barcode (optional)"></div><div class="col-md-12 text-end"><button class="btn btn-gradient">Save Drug</button></div></form></div><div class="card-modern p-4"><h5 class="mb-3"><i class="bi bi-list-ul"></i> Drug List</h5><input id="searchDrug" class="form-control mb-3" placeholder="Search drug..."><div style="max-height:400px; overflow:auto;"><table class="table table-modern table-sm"><thead><tr><th>Drug</th><th>Price</th><th>Qty</th><th>Threshold</th><th>Expiry</th><th>Barcode</th><th>Action</th></tr></thead><tbody id="drugsTable"></tbody></table></div></div></div></div>
+  <div id="salesView" style="display:none;"><div class="container"><div class="row g-4"><div class="col-md-6 position-relative"><div class="card-modern p-4"><h5 class="mb-3"><i class="bi bi-search"></i> Select Drugs</h5><input id="saleSearch" class="form-control mb-3" placeholder="Search drug or scan barcode..."><div id="saleDrugsList" style="max-height:320px; overflow:auto;"></div></div></div><div class="col-md-6"><div class="card-modern p-4"><h5 class="mb-3"><i class="bi bi-receipt"></i> Prescription</h5><div id="prescriptionArea"><p class="text-muted">Prescription is empty.</p></div><div class="mt-3 d-flex gap-2 align-items-center"><select id="paymentType" class="form-select w-auto"><option value="Paid">Paid</option><option value="Credit">Credit</option></select><input id="creditName" class="form-control" placeholder="Patient Name" style="display:none;"><input id="creditPhone" class="form-control" placeholder="Phone" style="display:none;"><button id="saveSaleBtn" class="btn btn-gradient ms-auto">Save & Print</button></div><div id="creditInfo" style="display:none;" class="patient-info mt-3"><div><strong id="creditInfoName"></strong></div><div class="muted-small">Phone: <b id="creditInfoPhone"></b></div><div class="muted-small">Balance: <b id="creditInfoBalance">0.00</b> USD</div><button class="btn btn-sm btn-outline-success mt-2" id="payBalanceBtn">Pay Balance</button></div></div></div></div></div>
+  <div id="reportsView" style="display:none;"><div class="container"><div class="row g-4"><div class="col-md-6"><div class="card-modern p-4 mb-4"><h5 class="mb-3"><i class="bi bi-cash-stack"></i> Sales Summary</h5><h3 id="reportTodayTotal">0.00</h3><div class="mt-3"><h6>Credit Patients</h6><ul id="reportCredits" class="list-group"></ul></div><div class="mt-3"><button id="exportDrugs" class="btn btn-sm btn-outline-primary">Excel Drugs</button> <button id="exportSales" class="btn btn-sm btn-outline-primary">Excel Sales</button></div></div><div class="card-modern p-4"><h5 class="mb-3"><i class="bi bi-arrow-return-left"></i> Returns</h5><div class="d-flex gap-2"><input id="returnId" class="form-control" placeholder="Order ID"><button class="btn btn-gradient" id="doReturnBtn">Process</button></div><div id="returnList" class="mt-3"></div></div></div><div class="col-md-6"><div class="card-modern p-4 mb-4"><h5 class="mb-3"><i class="bi bi-exclamation-triangle"></i> Low / Expired Stock</h5><ul id="reportLow" class="list-group"></ul></div><div class="card-modern p-4"><h5 class="mb-3"><i class="bi bi-clock-history"></i> Recent Sales</h5><div style="max-height:240px; overflow:auto;"><table class="table table-modern table-sm"><thead><tr><th>ID</th><th>Date</th><th>Total</th><th>Type</th></tr></thead><tbody id="salesTable"></tbody></table></div></div></div></div></div>
+</div>
+</div>
+
+<!-- PRINT Area -->
 <div id="printArea" style="display:none;"><div class="receipt-box"><div class="receipt-header"><h5 class="text-center mb-1">C.S PHARMACY</h5></div><div id="printContent"></div><div class="receipt-footer text-center mt-2">Thank you!</div></div></div>
 
 <script>
@@ -123,74 +130,47 @@ function save(k,d){localStorage.setItem(k,JSON.stringify(d))}
 function uid(p='id'){return p+'_'+Date.now()+'_'+Math.floor(Math.random()*9000+1000)}
 function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-/* Default admin */
+/* Defaults */
 let users=load(KEY_USERS);
-if(!users.length){
-  users=[{username:'admin',password:'1111',role:'admin'}];
-  save(KEY_USERS,users);
-}
-let drugs=load(KEY_DRUGS);
-let sales=load(KEY_SALES);
-let patients=load(KEY_PATIENTS);
-let returns=load(KEY_RETURNS);
-let currentUser=null;
+if(!users.length){users=[{username:'admin',password:'1111',role:'admin'}]; save(KEY_USERS,users);}
+let drugs=load(KEY_DRUGS), sales=load(KEY_SALES), patients=load(KEY_PATIENTS), returns=load(KEY_RETURNS), currentUser=null;
 
-/* ========== LOGIN ========== */
+/* ---------- LOGIN ---------- */
 document.getElementById('loginForm').addEventListener('submit',e=>{
   e.preventDefault();
   const u=document.getElementById('loginUser').value.trim();
   const p=document.getElementById('loginPass').value;
   const user=users.find(x=>x.username===u && x.password===p);
-  if(user){
-    sessionStorage.setItem('cs_logged',user.username);
-    sessionStorage.setItem('cs_role',user.role);
-    showMain(user);
-  }else{
-    Swal.fire({icon:'error',title='Wrong credentials'});
-  }
+  if(user){ sessionStorage.setItem('cs_logged',user.username); sessionStorage.setItem('cs_role',user.role); showMain(user); }
+  else{ Swal.fire({icon:'error',title:'Wrong credentials'}); }
   document.getElementById('loginPass').value='';
 });
-if(sessionStorage.getItem('cs_logged')){
-  const u=users.find(x=>x.username===sessionStorage.getItem('cs_logged'));
-  if(u) showMain(u);
-}
+if(sessionStorage.getItem('cs_logged')){ const u=users.find(x=>x.username===sessionStorage.getItem('cs_logged')); if(u) showMain(u); }
 
 function showMain(user){
   currentUser=user;
   document.getElementById('loginPage').style.display='none';
   document.getElementById('mainPage').style.display='block';
   document.getElementById('currentUser').textContent=user.username;
-  if(user.role==='admin'){
-    document.getElementById('adminPanel').style.display='block';
-    document.getElementById('drugsBtn').style.display='block';
-    renderUsers();
-  }
-  updateStats();renderLowList();showAlertIfLow();go('dashboard');
+  if(user.role==='admin'){ document.getElementById('adminPanel').style.display='block'; renderUsers(); }
+  updateStats(); renderLowList(); showAlertIfLow(); go('dashboard');
 }
-function logout(){
-  sessionStorage.removeItem('cs_logged');
-  sessionStorage.removeItem('cs_role');
-  location.reload();
-}
+function logout(){ sessionStorage.removeItem('cs_logged'); sessionStorage.removeItem('cs_role'); location.reload(); }
 
-/* ========== USER MANAGEMENT (ADMIN ONLY) ========== */
+/* ---------- ADMIN ---------- */
 document.getElementById('addUserForm').addEventListener('submit',e=>{
   e.preventDefault();
   const u=document.getElementById('newUser').value.trim();
   const p=document.getElementById('newPass').value;
   if(!u||!p)return Swal.fire({icon:'warning',title:'Fill all'});
   if(users.find(x=>x.username===u))return Swal.fire({icon:'warning',title:'User exists'});
-  users.push({username:u,password:p,role:'user'});
-  save(KEY_USERS,users);
-  Swal.fire({icon:'success',title:'User added'});
-  e.target.reset();
-  renderUsers();
+  users.push({username:u,password:p,role:'user'}); save(KEY_USERS,users);
+  Swal.fire({icon:'success',title:'User added'}); e.target.reset(); renderUsers();
 });
 function renderUsers(){
-  const ul=document.getElementById('userList');
-  ul.innerHTML='';
+  const ul=document.getElementById('userList'); ul.innerHTML='';
   users.forEach(u=>{
-    const li=document.createElement('li');li.className='list-group-item d-flex justify-content-between';
+    const li=document.createElement('li'); li.className='list-group-item d-flex justify-content-between';
     li.innerHTML=`<span>${escapeHtml(u.username)} (${u.role})</span>
       ${u.role!=='admin'?'<button class="btn btn-sm btn-outline-danger" onclick="deleteUser(\''+u.username+'\')"><i class="bi bi-trash"></i></button>':''}`;
     ul.appendChild(li);
@@ -198,27 +178,22 @@ function renderUsers(){
 }
 function deleteUser(username){
   Swal.fire({title:'Delete?',icon:'warning',showCancelButton:true}).then(r=>{
-    if(r.isConfirmed){
-      users=users.filter(x=>x.username!==username);
-      save(KEY_USERS,users);
-      renderUsers();
-    }
+    if(r.isConfirmed){ users=users.filter(x=>x.username!==username); save(KEY_USERS,users); renderUsers(); }
   });
 }
 
-/* ========== NAV ========== */
+/* ---------- NAV ---------- */
 function hideAll(){
   ['dashboardView','drugsView','salesView','reportsView'].forEach(v=>document.getElementById(v).style.display='none');
 }
 function go(p){
-  hideAll();
-  document.getElementById(p+'View').style.display='block';
+  hideAll(); document.getElementById(p+'View').style.display='block';
   if(p==='drugs')renderDrugs();
   if(p==='sales')renderSale();
   if(p==='reports')renderReports();
 }
 
-/* ========== DRUGS ========== */
+/* ---------- DRUGS ---------- */
 document.getElementById('addDrugForm').addEventListener('submit',e=>{
   e.preventDefault();
   const id=document.getElementById('editDrugId').value;
@@ -227,24 +202,25 @@ document.getElementById('addDrugForm').addEventListener('submit',e=>{
   const qty=parseInt(document.getElementById('drugQty').value)||0;
   const low=parseInt(document.getElementById('drugLow').value)||5;
   const expiry=document.getElementById('drugExpiry').value;
+  const barcode=document.getElementById('drugBarcode').value.trim();
   if(!name||!expiry)return Swal.fire({icon:'warning',title:'Missing fields'});
   let list=load(KEY_DRUGS);
   if(id){
-    list=list.map(x=>x.id===id?{...x,name,price,quantity:qty,low,expiry}:x);
+    list=list.map(x=>x.id===id?{...x,name,price,quantity:qty,low,expiry,barcode}:x);
     Swal.fire({icon:'success',title:'Updated'});
   }else{
-    list.push({id:uid('dr'),name,price,quantity:qty,low,expiry});
+    list.push({id:uid('dr'),name,price,quantity:qty,low,expiry,barcode});
     Swal.fire({icon:'success',title:'Added'});
   }
-  save(KEY_DRUGS,list);e.target.reset();renderDrugs();
+  save(KEY_DRUGS,list); e.target.reset(); renderDrugs();
 });
 document.getElementById('searchDrug').addEventListener('input',renderDrugs);
 function renderDrugs(){
   const list=load(KEY_DRUGS);
   const q=document.getElementById('searchDrug').value.toLowerCase();
-  const tbody=document.getElementById('drugsTable');tbody.innerHTML='';
+  const tbody=document.getElementById('drugsTable'); tbody.innerHTML='';
   list.forEach(d=>{
-    if(q&&!d.name.toLowerCase().includes(q))return;
+    if(q&&!d.name.toLowerCase().includes(q)&&!((d.barcode||'').toLowerCase().includes(q)))return;
     const expClass=new Date(d.expiry)<new Date()?'expiry-danger':'';
     const tr=document.createElement('tr');
     tr.innerHTML=`
@@ -253,6 +229,7 @@ function renderDrugs(){
       <td>${d.quantity} ${d.quantity<=d.low?'<span class="low-badge">Low</span>':''}</td>
       <td>${d.low}</td>
       <td class="${expClass}">${d.expiry}</td>
+      <td>${escapeHtml(d.barcode||'')}</td>
       <td>
         <button class="btn btn-sm btn-outline-primary" data-edit="${d.id}"><i class="bi bi-pencil"></i></button>
         <button class="btn btn-sm btn-outline-danger" data-del="${d.id}"><i class="bi bi-trash"></i></button>
@@ -273,33 +250,43 @@ document.getElementById('drugsTable').addEventListener('click',e=>{
     document.getElementById('drugQty').value=d.quantity;
     document.getElementById('drugLow').value=d.low;
     document.getElementById('drugExpiry').value=d.expiry;
+    document.getElementById('drugBarcode').value=d.barcode||'';
   }else if(btn.dataset.del){
     Swal.fire({title:'Delete?',icon:'warning',showCancelButton:true}).then(r=>{
-      if(r.isConfirmed){save(KEY_DRUGS,list.filter(x=>x.id!==id));renderDrugs();updateStats();}
+      if(r.isConfirmed){ save(KEY_DRUGS,list.filter(x=>x.id!==id)); renderDrugs(); updateStats(); }
     });
   }
 });
 
-/* ========== SALES / CREDIT / PRINT ========== */
+/* ---------- SALES ---------- */
 let prescription=[];
 function renderSale(){
-  renderDrugsList();renderPrescription();setupCredit();
+  renderDrugsList(); renderPrescription(); setupCredit();
+  document.getElementById('saleSearch').focus();
 }
 function renderDrugsList(){
   const list=load(KEY_DRUGS);
   const q=document.getElementById('saleSearch').value.toLowerCase();
-  const container=document.getElementById('saleDrugsList');container.innerHTML='';
+  const container=document.getElementById('saleDrugsList'); container.innerHTML='';
   list.forEach(d=>{
-    if(q&&!d.name.toLowerCase().includes(q))return;
+    if(q&&!d.name.toLowerCase().includes(q)&&!((d.barcode||'').toLowerCase().includes(q)))return;
     const expClass=new Date(d.expiry)<new Date()?'expiry-danger':'';
-    const div=document.createElement('div');div.className='d-flex justify-content-between align-items-center p-2 border-bottom';
-    div.innerHTML=`<div><strong>${escapeHtml(d.name)}</strong><br><small class="${expClass}">$${d.price.toFixed(2)} · Qty:${d.quantity} · Exp:${d.expiry}</small></div>
+    const div=document.createElement('div'); div.className='d-flex justify-content-between align-items-center p-2 border-bottom';
+    div.innerHTML=`<div><strong>${escapeHtml(d.name)}</strong><br><small class="${expClass}">$${d.price.toFixed(2)} · Qty:${d.quantity} · Exp:${d.expiry} ${d.barcode?· Barcode:'+escapeHtml(d.barcode):''}</small></div>
       <div class="d-flex gap-2"><input type="number" class="form-control form-control-sm" value="1" min="1" max="${d.quantity}" style="width:70px">
       <button class="btn btn-gradient btn-sm addToPrescription" data-id="${d.id}">Add</button></div>`;
     container.appendChild(div);
   });
-  document.getElementById('saleSearch').addEventListener('input',renderDrugsList);
 }
+document.getElementById('saleSearch').addEventListener('keydown',e=>{
+  if(e.key==='Enter' && e.target.value.length>5){
+    const list=load(KEY_DRUGS);
+    const hit=list.find(d=>(d.barcode||'').toLowerCase()===e.target.value.toLowerCase());
+    if(hit){
+      e.target.value=hit.name; renderDrugsList();
+    }
+  });
+});
 document.getElementById('saleDrugsList').addEventListener('click',e=>{
   const btn=e.target.closest('button.addToPrescription');
   if(!btn)return;
@@ -309,7 +296,7 @@ document.getElementById('saleDrugsList').addEventListener('click',e=>{
   const d=list.find(x=>x.id===id);
   if(!d)return Swal.fire({icon:'error',title:'Not found'});
   if(new Date(d.expiry)<new Date())return Swal.fire({icon:'error',title:'Expired drug'});
-  if(qty>d.quantity)return Swal.fire({icon:'error',title:'Not enough stock'});
+  if(p.qty>d.quantity)throw new Error(`Not enough ${d.name}`);
   const found=prescription.find(x=>x.id===id);
   if(found)found.qty=Math.min(found.qty+qty,d.quantity);
   else prescription.push({id:d.id,name:d.name,price:d.price,qty});
@@ -321,14 +308,14 @@ function renderPrescription(){
   let html=`<table class="table table-sm"><thead><tr><th>Drug</th><th>Qty</th><th>Price</th><th>Total</th><th></th></tr></thead><tbody>`;
   let total=0;
   prescription.forEach((p,idx)=>{
-    const sub=p.qty*p.price;total+=sub;
+    const sub=p.qty*p.price; total+=sub;
     html+=`<tr><td>${escapeHtml(p.name)}</td><td><input type="number" min="1" value="${p.qty}" class="form-control form-control-sm" data-idx="${idx}" style="width:70px"></td><td>$${p.price.toFixed(2)}</td><td>$${sub.toFixed(2)}</td><td><button class="btn btn-sm btn-outline-danger" data-idx="${idx}"><i class="bi bi-x"></i></button></td></tr>`;
   });
   html+=`</tbody></table><div class="text-end"><h5>Total: $${total.toFixed(2)}</h5></div>`;
   area.innerHTML=html;
 }
 document.getElementById('prescriptionArea').addEventListener('click',e=>{
-  if(e.target.closest('button')){const idx=e.target.closest('button').dataset.idx;prescription.splice(idx,1);renderPrescription();}
+  if(e.target.closest('button')){ const idx=e.target.closest('button').dataset.idx; prescription.splice(idx,1); renderPrescription(); }
 });
 document.getElementById('prescriptionArea').addEventListener('change',e=>{
   const inp=e.target.closest('input[type=number]');
@@ -337,11 +324,11 @@ document.getElementById('prescriptionArea').addEventListener('change',e=>{
   const list=load(KEY_DRUGS);
   const it=list.find(x=>x.id===prescription[idx].id);
   let v=parseInt(inp.value)||1;
-  if(v>it.quantity){Swal.fire({icon:'error',title:'Exceeds stock'});inp.value=prescription[idx].qty;return;}
-  prescription[idx].qty=v;renderPrescription();
+  if(v>it.quantity){ Swal.fire({icon:'error',title:'Exceeds stock'}); inp.value=prescription[idx].qty; return; }
+  prescription[idx].qty=v; renderPrescription();
 });
 
-/* Credit pay - password required */
+/* Credit */
 document.getElementById('paymentType').addEventListener('change',()=>{
   const isCredit=document.getElementById('paymentType').value==='Credit';
   document.getElementById('creditName').style.display=isCredit?'':'none';
@@ -372,8 +359,7 @@ document.getElementById('payBalanceBtn').addEventListener('click',()=>{
     title:'Pay Balance – Admin Password',
     html:`<input id="swAmount" type="number" class="swal2-input" placeholder="Amount" min="0.01" step="0.01">
           <input id="swPass" type="password" class="swal2-input" placeholder="Admin Password">`,
-    showCancelButton:true,
-    confirmButtonText:'Pay',
+    showCancelButton:true, confirmButtonText:'Pay',
     preConfirm:()=>{
       const amt=parseFloat(document.getElementById('swAmount').value);
       const pass=document.getElementById('swPass').value;
@@ -391,7 +377,7 @@ document.getElementById('payBalanceBtn').addEventListener('click',()=>{
       save(KEY_PATIENTS,list);
       currentPatient=p;
       document.getElementById('creditInfoBalance').textContent='$'+p.balance.toFixed(2);
-      alert('Paid $'+amt+' – new balance $'+p.balance.toFixed(2));
+      Swal.fire({icon:'success',title:'Paid'});
     }
   });
 });
@@ -413,10 +399,10 @@ document.getElementById('saveSaleBtn').addEventListener('click',()=>{
       if(p.qty>d.quantity)throw new Error(`Not enough ${d.name}`);
     });
   }catch(e){Swal.fire({icon:'error',title:e.message});return;}
-  let total=0;prescription.forEach(p=>total+=p.qty*p.price);total=parseFloat(total.toFixed(2));
+  let total=0; prescription.forEach(p=>total+=p.qty*p.price); total=parseFloat(total.toFixed(2));
   const orderId=uid('INV-');
   const sale={id:orderId,total,payment,patient:payment==='Credit'?name:null,phone:payment==='Credit'?phone:null,date:new Date().toISOString(),lines:prescription.map(x=>({...x})),returned:false};
-  let salesList=load(KEY_SALES);salesList.push(sale);save(KEY_SALES,salesList);
+  let salesList=load(KEY_SALES); salesList.push(sale); save(KEY_SALES,salesList);
   save(KEY_DRUGS,list.map(d=>{
     const line=prescription.find(p=>p.id===d.id);
     if(line)d.quantity-=line.qty;
@@ -441,13 +427,13 @@ document.getElementById('saveSaleBtn').addEventListener('click',()=>{
   document.getElementById('printContent').innerHTML=rc;
   const printArea=document.getElementById('printArea');
   printArea.style.display='block';
-  setTimeout(()=>{window.print();printArea.style.display='none';},300);
-  prescription=[];renderPrescription();renderSale();updateStats();showAlertIfLow();
+  setTimeout(()=>{window.print(); printArea.style.display='none';},300);
+  prescription=[]; renderPrescription(); renderSale(); updateStats(); showAlertIfLow();
   if(payment==='Credit')findPatient();
   Swal.fire({icon:'success',title:'Saved & Printed',timer:1500});
 });
 
-/* ========== REPORTS ========== */
+/* ---------- REPORTS ---------- */
 function updateStats(){
   const list=load(KEY_DRUGS);
   const low=list.filter(d=>d.quantity<=d.low).length;
@@ -497,7 +483,7 @@ function renderReports(){
   const rc=document.getElementById('reportCredits');
   rc.innerHTML='';
   const plist=load(KEY_PATIENTS);
-  if(plist.length)plist.forEach(p=>rc.innerHTML+=`<li class="list-group-item d-flex justify-content-between"><div><strong>${escapeHtml(p.name)}</strong><br><small>${p.phone}</small></div><span>$${p.balance.toFixed(2)}</span></li>`);
+  if(plist.length)plist.forEach(p=>rc.innerHTML+=`<li class="list-group-item d-flex justify-content-between">${escapeHtml(p.name)} <span>$${p.balance.toFixed(2)}</span></li>`);
   else rc.innerHTML='<li class="list-group-item text-muted">No credit patients</li>';
 
   const rl=document.getElementById('reportLow');
@@ -540,12 +526,46 @@ document.getElementById('doReturnBtn').addEventListener('click',()=>{
   let rlist=load(KEY_RETURNS);
   rlist.push({id:uid('r'),orderId:s.id,date:new Date().toISOString()});
   save(KEY_RETURNS,rlist);
-  renderReports();updateStats();renderDrugs();renderSale();
+  renderReports(); updateStats(); renderDrugs(); renderSale();
   Swal.fire({icon:'success',title:'Returned'});
 });
 
-/* ========== INIT ========== */
-updateStats();renderLowList();showAlertIfLow();renderReports();
+/* Excel Export */
+function exportArrayToExcel(arr,fileName){
+  const ws=XLSX.utils.json_to_sheet(arr);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Sheet1');
+  XLSX.writeFile(wb,fileName+'.xlsx');
+}
+document.getElementById('exportDrugs').onclick=()=>{
+  const list=load(KEY_DRUGS).map(d=>({
+    Name:d.name, Barcode:d.barcode||'', Price:d.price, Qty:d.quantity,
+    Threshold:d.low, Expiry:d.expiry
+  }));
+  exportArrayToExcel(list,'CS_Drugs_'+new Date().toISOString().slice(0,10));
+};
+document.getElementById('exportSales').onclick=()=>{
+  const list=load(KEY_SALES).map(s=>({
+    ID:s.id, Date:new Date(s.date).toLocaleString(), Total:s.total,
+    Payment:s.payment, Patient:s.patient||'', Phone:s.phone||'', Returned:s.returned
+  }));
+  exportArrayToExcel(list,'CS_Sales_'+new Date().toISOString().slice(0,10));
+};
+
+/* ---------- THEME ---------- */
+const btn=document.getElementById('themeToggle');
+btn.onclick=()=>{
+  document.body.classList.toggle('dark');
+  localStorage.setItem('cs_theme', document.body.classList.contains('dark')?'dark':'light');
+  btn.innerHTML=document.body.classList.contains('dark')?'<i class="bi bi-sun"></i>':'<i class="bi bi-moon"></i>';
+};
+if(localStorage.getItem('cs_theme')==='dark'){
+  document.body.classList.add('dark');
+  btn.innerHTML='<i class="bi bi-sun"></i>';
+}
+
+/* ---------- INIT ---------- */
+updateStats(); renderLowList(); showAlertIfLow(); renderReports();
 </script>
 </body>
 </html>
